@@ -1,0 +1,206 @@
+net use
+
+
+
+Create a folder on command-line:
+
+MD [drive:]path
+
+eg.
+MD e:\users\kai$
+
+
+
+
+
+Assign access rights to a folder:
+
+icacls e:\users\kai$ /grant <user1>:(F)
+
+icacls [Pfad]Datei-oder-Ordner /grant Benutzer-oder-Gruppe:[(CI)(OI)](Rechte)
+eg.
+icacls e:\users\kai$ /grant springfield\kai.starke-naumann:(CI)(OI)(F)
+
+
+
+
+
+
+
+Create a share on command-line:
+
+
+
+
+net share <sharename=drive:path>
+
+net share myshare=C:\Users\Myname
+net share Docs=E:\Documents /grant:everyone,FULL
+
+
+
+
+NET SHARE
+sharename
+          sharename=drive:path [/GRANT:user,[READ | CHANGE | FULL]]
+                               [/USERS:number | /UNLIMITED]
+                               [/REMARK:"text"]
+                               [/CACHE:Manual | Documents| Programs | BranchCache | None]
+          sharename [/USERS:number | /UNLIMITED]
+                    [/REMARK:"text"]
+                    [/CACHE:Manual | Documents | Programs | BranchCache | None]
+          {sharename | devicename | drive:path} /DELETE
+          sharename \\computername /DELETE
+
+
+
+
+
+
+
+
+
+
+
+
+
+Create a remote FOLDER with powershell:
+http://stackoverflow.com/questions/5226772/powershell-create-folder-on-remote-server
+
+
+$stageSvrs | %{
+         Invoke-Command -ComputerName $_ -ScriptBlock { 
+             $setupFolder = "c:\SetupSoftwareAndFiles"
+             Write-Host "Creating SetupSoftwareAndFiles Folder"
+             New-Item -Path $setupFolder -type directory -Force 
+             Write-Host "Folder creation complete"
+         }
+}
+
+
+
+
+
+
+Alt.
+$ComputerName = "fooComputer"
+$DriveLetter = "D"
+$Path = "fooPath"
+New-Item -Path \\$ComputerName\$DriveLetter$\$Path -type directory -Force 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Create a share with PowerShell
+Create method of the Win32_share class
+https://msdn.microsoft.com/en-us/library/aa389393(v=vs.85).aspx
+https://www.experts-exchange.com/questions/24593268/Create-Remote-Share-with-PowerShell.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+example #1
+
+# create pointer to class
+$comp=[WMICLASS]"Win32_share"
+
+# create a new share
+$comp.create("c:\","mynewshare",0)
+
+# see results
+gwmi win32_share
+
+
+example #2
+
+This is from the MS powershell team:
+
+To create a share use Win32_Share wmi class. Here is how you can do it:
+
+1. Verify the share you are already exists
+
+PS C:\temp> gwmi -query 'select * from win32_share where Name="TestShare"'
+
+2. Access WMI Win32_Share class
+
+PS C:\temp> $cshare = [wmiclass]"Win32_Share"
+PS C:\temp> $cshare | gm create | fl
+
+
+TypeName : System.Management.ManagementClass#ROOT\CIMV2\Win32_Share
+Name : Create
+MemberType : Method
+Definition : System.Management.ManagementBaseObject Create(System.String
+Path, System.String Name, System.UInt32 Type,
+System.UInt32 MaximumAllowed, System.String Description,
+System.String Password, System.Management.Managem
+entObject#Win32_SecurityDescriptor Access)
+
+3. Create the share you want
+
+PS C:\temp> $cshare.Create("C:\temp","TestShare",0)
+
+
+__GENUS : 2
+__CLASS : __PARAMETERS
+__SUPERCLASS :
+__DYNASTY : __PARAMETERS
+__RELPATH :
+__PROPERTY_COUNT : 1
+__DERIVATION : {}
+__SERVER :
+__NAMESPACE :
+__PATH :
+ReturnValue : 0
+
+4. Check the share you just created
+
+PS C:\temp> gwmi -query 'select * from win32_share where Name="TestShare"'
+
+
+
+
+
+
+On aremote System:
+
+To check for a share on a specific computer:
+
+$ComputerName = "somePC"
+
+Get-WMIObject Win32_Share -Filter "Name='TestShare'" -ComputerName $ComputerName
+
+And to connect to the WMIClass to create a share on that computer:
+
+$cshare = [WMIClass]"\\$ComputerName\root\cimv2:Win32_Share"
+
+Then you can continue with the creation as above:
+
+$cshare.Create("C:\temp","TestShare",0)
+
